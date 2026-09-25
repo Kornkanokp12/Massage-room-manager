@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
 
 <body>
 
+    <!-- Header -->
     <header>
         <div>
             <h1>Nadii Room Manager</h1>
@@ -20,93 +22,45 @@
         <button id="addRoomBtn">+ Add Room</button>
     </header>
 
+
     <main>
 
+        <!-- Dashboard Summary -->
         <section class="summary">
+
             <div class="summary-card">
                 <h3>Total Rooms</h3>
-                <p id="totalRooms">3</p>
+                <p id="totalRooms">0</p>
             </div>
 
             <div class="summary-card">
                 <h3>Available</h3>
-                <p id="availableRooms">1</p>
+                <p id="availableRooms">0</p>
             </div>
 
             <div class="summary-card">
                 <h3>In Use</h3>
-                <p id="inUseRooms">1</p>
+                <p id="inUseRooms">0</p>
             </div>
 
             <div class="summary-card">
                 <h3>Needs Cleaning</h3>
-                <p id="cleaningRooms">1</p>
+                <p id="cleaningRooms">0</p>
             </div>
+
         </section>
 
 
+        <!-- Treatment Rooms -->
         <section class="rooms-section">
 
             <h2>Treatment Rooms</h2>
 
+            <!--
+                Rooms are loaded automatically
+                from the Supabase database.
+            -->
             <div id="roomContainer" class="room-container">
-
-                <!-- Room 1 -->
-                <div class="room-card">
-                    <div class="room-header">
-                        <h3>Room 1</h3>
-                        <span class="status available">Available</span>
-                    </div>
-
-                    <p>
-                        <strong>Therapist:</strong>
-                        <span class="therapist">Not Assigned</span>
-                    </p>
-
-                    <div class="room-actions">
-                        <button class="edit-btn">Edit</button>
-                        <button class="delete-btn">Delete</button>
-                    </div>
-                </div>
-
-
-                <!-- Room 2 -->
-                <div class="room-card">
-                    <div class="room-header">
-                        <h3>Room 2</h3>
-                        <span class="status in-use">In Use</span>
-                    </div>
-
-                    <p>
-                        <strong>Therapist:</strong>
-                        <span class="therapist">Anna</span>
-                    </p>
-
-                    <div class="room-actions">
-                        <button class="edit-btn">Edit</button>
-                        <button class="delete-btn">Delete</button>
-                    </div>
-                </div>
-
-
-                <!-- Room 3 -->
-                <div class="room-card">
-                    <div class="room-header">
-                        <h3>Room 3</h3>
-                        <span class="status cleaning">Needs Cleaning</span>
-                    </div>
-
-                    <p>
-                        <strong>Therapist:</strong>
-                        <span class="therapist">Not Assigned</span>
-                    </p>
-
-                    <div class="room-actions">
-                        <button class="edit-btn">Edit</button>
-                        <button class="delete-btn">Delete</button>
-                    </div>
-                </div>
-
             </div>
 
         </section>
@@ -114,7 +68,7 @@
     </main>
 
 
-    <!-- Add/Edit Room Form -->
+    <!-- Add/Edit Room Modal -->
     <div id="roomModal" class="modal">
 
         <div class="modal-content">
@@ -125,7 +79,11 @@
 
             <form id="roomForm">
 
-                <label for="roomName">Room Name</label>
+                <!-- Room Name -->
+                <label for="roomName">
+                    Room Name
+                </label>
+
                 <input
                     type="text"
                     id="roomName"
@@ -133,14 +91,23 @@
                     required
                 >
 
-                <label for="therapistName">Therapist</label>
+
+                <!-- Therapist -->
+                <label for="therapistName">
+                    Therapist
+                </label>
+
                 <input
                     type="text"
                     id="therapistName"
                     placeholder="Therapist name"
                 >
 
-                <label for="roomStatus">Status</label>
+
+                <!-- Room Status -->
+                <label for="roomStatus">
+                    Status
+                </label>
 
                 <select id="roomStatus">
 
@@ -158,7 +125,12 @@
 
                 </select>
 
-                <button type="submit" class="save-btn">
+
+                <!-- Save Button -->
+                <button
+                    type="submit"
+                    class="save-btn"
+                >
                     Save Room
                 </button>
 
@@ -169,7 +141,12 @@
     </div>
 
 
+    <!-- Supabase JavaScript Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Our JavaScript -->
     <script src="script.js"></script>
 
 </body>
+
 </html>

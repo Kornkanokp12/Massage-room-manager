@@ -1,3 +1,11 @@
+
+const SUPABASE_URL = "https://xcpxzyaporcxrjdfecdd.supabase.co"
+const SUPABASE_KEY = "sb_publishable_mx8YTSl1ZDf04lKGyMNYbg_hfdtm1fh"
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 const addRoomBtn = document.getElementById("addRoomBtn");
 const roomModal = document.getElementById("roomModal");
 const closeModal = document.getElementById("closeModal");
@@ -9,76 +17,61 @@ const roomNameInput = document.getElementById("roomName");
 const therapistInput = document.getElementById("therapistName");
 const statusInput = document.getElementById("roomStatus");
 
-let editingCard = null;
+let editingRoomId = null;
 
-// Open Add Room form
-addRoomBtn.addEventListener("click", () => {
-    editingCard = null;
-    modalTitle.textContent = "Add Room";
-    roomForm.reset();
-    roomModal.style.display = "block";
-});
 
-// Close form
-closeModal.addEventListener("click", () => {
-    roomModal.style.display = "none";
-});
+// ========================================
+// LOAD ROOMS FROM SUPABASE
+// ========================================
 
-// Close when clicking outside form
-window.addEventListener("click", (event) => {
-    if (event.target === roomModal) {
-        roomModal.style.display = "none";
-    }
-});
+async function loadRooms() {
 
-// Save room
-roomForm.addEventListener("submit", (event) => {
-    event.preventDefault();
+    const { data, error } = await supabaseClient
+        .from("rooms")
+        .select("*")
+        .order("id", { ascending: true });
 
-    const roomName = roomNameInput.value.trim();
-    const therapist =
-        therapistInput.value.trim() || "Not Assigned";
-    const status = statusInput.value;
-
-    if (editingCard) {
-        updateRoomCard(
-            editingCard,
-            roomName,
-            therapist,
-            status
-        );
-    } else {
-        createRoomCard(
-            roomName,
-            therapist,
-            status
-        );
+    if (error) {
+        console.error("Error loading rooms:", error);
+        alert("Could not load rooms from database.");
+        return;
     }
 
-    roomModal.style.display = "none";
-    roomForm.reset();
-    editingCard = null;
+    roomContainer.innerHTML = "";
+
+    data.forEach(room => {
+        createRoomCard(room);
+    });
 
     updateSummary();
-});
+}
 
-// Create room
-function createRoomCard(roomName, therapist, status) {
+
+// ========================================
+// CREATE ROOM CARD
+// ========================================
+
+function createRoomCard(room) {
 
     const card = document.createElement("div");
     card.className = "room-card";
 
+    card.dataset.id = room.id;
+
     card.innerHTML = `
         <div class="room-header">
-            <h3>${roomName}</h3>
-            <span class="status ${getStatusClass(status)}">
-                ${status}
+            <h3>${room.room_name}</h3>
+
+            <span class="status ${getStatusClass(room.status)}">
+                ${room.status}
             </span>
         </div>
 
         <p>
             <strong>Therapist:</strong>
-            <span class="therapist">${therapist}</span>
+            <span class="therapist">
+                ${room.therapist || "Not Assigned"}
+            </span>
         </p>
 
         <div class="room-actions">
@@ -90,69 +83,176 @@ function createRoomCard(roomName, therapist, status) {
     roomContainer.appendChild(card);
 }
 
-// Update room
-function updateRoomCard(card, roomName, therapist, status) {
 
-    card.querySelector("h3").textContent = roomName;
+// ========================================
+// OPEN ADD ROOM FORM
+// ========================================
 
-    card.querySelector(".therapist").textContent =
-        therapist;
+addRoomBtn.addEventListener("click", () => {
 
-    const statusElement =
-        card.querySelector(".status");
+    editingRoomId = null;
 
-    statusElement.textContent = status;
+    modalTitle.textContent = "Add Room";
 
-    statusElement.className =
-        "status " + getStatusClass(status);
-}
+    roomForm.reset();
 
-// Edit and Delete
-roomContainer.addEventListener("click", (event) => {
+    roomModal.style.display = "block";
+});
+
+
+// ========================================
+// CLOSE MODAL
+// ========================================
+
+closeModal.addEventListener("click", () => {
+    roomModal.style.display = "none";
+});
+
+
+window.addEventListener("click", event => {
+
+    if (event.target === roomModal) {
+        roomModal.style.display = "none";
+    }
+});
+
+
+// ========================================
+// ADD OR UPDATE ROOM
+// ========================================
+
+roomForm.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    const roomName = roomNameInput.value.trim();
+
+    const therapist =
+        therapistInput.value.trim() || "Not Assigned";
+
+    const status = statusInput.value;
+
+
+    // UPDATE EXISTING ROOM
+    if (editingRoomId) {
+
+        const { error } = await supabaseClient
+            .from("rooms")
+            .update({
+                room_name: roomName,
+                therapist: therapist,
+                status: status
+            })
+            .eq("id", editingRoomId);
+
+        if (error) {
+            console.error(error);
+            alert("Error updating room.");
+            return;
+        }
+
+    }
+
+    // CREATE NEW ROOM
+    else {
+
+        const { error } = await supabaseClient
+            .from("rooms")
+            .insert([
+                {
+                    room_name: roomName,
+                    therapist: therapist,
+                    status: status
+                }
+            ]);
+
+        if (error) {
+            console.error(error);
+            alert("Error adding room.");
+            return;
+        }
+    }
+
+
+    roomModal.style.display = "none";
+
+    roomForm.reset();
+
+    editingRoomId = null;
+
+    await loadRooms();
+});
+
+
+// ========================================
+// EDIT OR DELETE ROOM
+// ========================================
+
+roomContainer.addEventListener("click", async event => {
 
     const card = event.target.closest(".room-card");
 
     if (!card) return;
 
-    // Delete
-    if (event.target.classList.contains("delete-btn")) {
+    const roomId = card.dataset.id;
 
-        const roomName =
-            card.querySelector("h3").textContent;
 
-        const confirmDelete =
-            confirm(`Delete ${roomName}?`);
-
-        if (confirmDelete) {
-            card.remove();
-            updateSummary();
-        }
-    }
-
-    // Edit
+    // EDIT
     if (event.target.classList.contains("edit-btn")) {
 
-        editingCard = card;
+        editingRoomId = roomId;
 
         modalTitle.textContent = "Edit Room";
 
         roomNameInput.value =
-            card.querySelector("h3").textContent;
+            card.querySelector("h3").textContent.trim();
 
         therapistInput.value =
-            card.querySelector(".therapist")?.textContent.trim()
-            || card.querySelector("p").textContent
-                .replace("Therapist:", "")
-                .trim();
+            card.querySelector(".therapist")
+                .textContent.trim();
 
         statusInput.value =
-            card.querySelector(".status").textContent.trim();
+            card.querySelector(".status")
+                .textContent.trim();
 
         roomModal.style.display = "block";
     }
+
+
+    // DELETE
+    if (event.target.classList.contains("delete-btn")) {
+
+        const roomName =
+            card.querySelector("h3").textContent.trim();
+
+        const confirmDelete =
+            confirm(`Delete ${roomName}?`);
+
+        if (!confirmDelete) return;
+
+
+        const { error } = await supabaseClient
+            .from("rooms")
+            .delete()
+            .eq("id", roomId);
+
+
+        if (error) {
+            console.error(error);
+            alert("Error deleting room.");
+            return;
+        }
+
+
+        await loadRooms();
+    }
 });
 
-// Status CSS class
+
+// ========================================
+// STATUS STYLE
+// ========================================
+
 function getStatusClass(status) {
 
     if (status === "Available") {
@@ -166,7 +266,11 @@ function getStatusClass(status) {
     return "cleaning";
 }
 
-// Update dashboard numbers
+
+// ========================================
+// UPDATE DASHBOARD NUMBERS
+// ========================================
+
 function updateSummary() {
 
     const cards =
@@ -176,11 +280,13 @@ function updateSummary() {
     let inUse = 0;
     let cleaning = 0;
 
-    cards.forEach((card) => {
+
+    cards.forEach(card => {
 
         const status =
             card.querySelector(".status")
                 .textContent.trim();
+
 
         if (status === "Available") {
             available++;
@@ -195,6 +301,7 @@ function updateSummary() {
         }
     });
 
+
     document.getElementById("totalRooms").textContent =
         cards.length;
 
@@ -208,4 +315,9 @@ function updateSummary() {
         cleaning;
 }
 
-updateSummary();
+
+// ========================================
+// START APPLICATION
+// ========================================
+
+loadRooms();
