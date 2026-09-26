@@ -55,4 +55,4 @@ The application supports CRUD operations:
 This application was created as a prototype for managing treatment rooms in a massage facility. It provides a simple dashboard that allows staff to monitor room availability and update room information.
 
 ## Demo Video
-[Loom Demo Video](https://www.loom.com/share/9754312d1eda4a2cafb2232c955dbce2)
+[Watch the Nadii Room Manager Demo on YouTube](https://youtu.be/qSI2cFYfeFs)
